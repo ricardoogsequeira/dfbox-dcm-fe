@@ -1,0 +1,427 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  --edp-red: #e30613;
+  --edp-red-dark: #b50017;
+  --edp-green: #00a443;
+  --edp-teal: #009cab;
+  --edp-marine: #212e3e;
+  --edp-electric: #28ff52;
+  --edp-ice-blue: #0cd3f8;
+  --edp-slate: #7c9599;
+  --edp-ink: #202a33;
+  --edp-muted: #63717c;
+  --edp-line: #dce7e5;
+  --edp-surface: #ffffff;
+  --edp-bg: #f6f8f7;
+  --edp-bg-panel: #eef5f2;
+  --edp-soft-red: rgb(227 6 19 / 10%);
+  --edp-soft-green: rgb(0 164 67 / 12%);
+  --edp-soft-teal: rgb(0 156 171 / 12%);
+  --edp-shadow: 0 14px 34px rgb(32 42 51 / 8%);
+  --mat-sys-primary: var(--edp-green);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: var(--edp-soft-green);
+  --mat-sys-on-primary-container: var(--edp-green);
+  --mat-sys-secondary: var(--edp-teal);
+  --mat-sys-secondary-container: var(--edp-soft-teal);
+  --mat-sys-tertiary: var(--edp-green);
+  --mat-sys-tertiary-container: var(--edp-soft-green);
+  --mat-sys-error: var(--edp-red);
+  --mat-sys-surface: var(--edp-surface);
+  --mat-sys-surface-container: var(--edp-bg-panel);
+  --mat-sys-background: var(--edp-bg);
+  --mat-sys-on-surface: var(--edp-ink);
+  --mat-sys-on-surface-variant: var(--edp-muted);
+  --mat-sys-outline: var(--edp-line);
+  --mat-sys-outline-variant: var(--edp-line);
+  --mat-sys-corner-small: 10px;
+  --mat-sys-corner-medium: 14px;
+  --mat-sys-corner-large: 20px;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  letter-spacing: 0;
+}
+
+body {
+  background: var(--edp-surface);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.mat-icon {
+  font-family: "Material Icons" !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "liga";
+}
+
+.mat-mdc-unelevated-button:not(:disabled),
+.mat-mdc-raised-button:not(:disabled),
+.mat-mdc-flat-button:not(:disabled),
+.mat-mdc-outlined-button:not(:disabled) {
+  --mdc-filled-button-container-color: var(--edp-electric) !important;
+  --mdc-filled-button-label-text-color: var(--edp-marine) !important;
+  --mdc-outlined-button-label-text-color: var(--edp-marine) !important;
+  --mdc-outlined-button-outline-color: var(--edp-electric) !important;
+  background: var(--edp-electric) !important;
+  border-color: var(--edp-electric) !important;
+  color: var(--edp-marine) !important;
+}
+
+.mat-mdc-unelevated-button:not(:disabled):hover,
+.mat-mdc-raised-button:not(:disabled):hover,
+.mat-mdc-flat-button:not(:disabled):hover,
+.mat-mdc-outlined-button:not(:disabled):hover {
+  --mdc-filled-button-container-color: var(--edp-marine) !important;
+  --mdc-filled-button-label-text-color: #ffffff !important;
+  --mdc-outlined-button-label-text-color: #ffffff !important;
+  --mdc-outlined-button-outline-color: var(--edp-marine) !important;
+  background: var(--edp-marine) !important;
+  border-color: var(--edp-marine) !important;
+  color: #ffffff !important;
+}
+
+.mat-mdc-unelevated-button:not(:disabled):hover .mat-icon,
+.mat-mdc-raised-button:not(:disabled):hover .mat-icon,
+.mat-mdc-flat-button:not(:disabled):hover .mat-icon,
+.mat-mdc-outlined-button:not(:disabled):hover .mat-icon {
+  color: #ffffff !important;
+}
+
+.mat-mdc-unelevated-button:disabled,
+.mat-mdc-raised-button:disabled,
+.mat-mdc-flat-button:disabled,
+.mat-mdc-outlined-button:disabled {
+  opacity: .48;
+}
+
+/* Keep every action button on the same EDP interaction system, regardless of
+   whether Angular Material renders it as flat or stroked. */
+button[mat-flat-button],
+a[mat-flat-button],
+button[mat-stroked-button],
+a[mat-stroked-button] {
+  --mdc-filled-button-container-color: var(--edp-electric) !important;
+  --mdc-filled-button-label-text-color: var(--edp-marine) !important;
+  --mdc-outlined-button-container-color: var(--edp-electric) !important;
+  --mdc-outlined-button-label-text-color: var(--edp-marine) !important;
+  --mdc-outlined-button-outline-color: var(--edp-electric) !important;
+  background: var(--edp-electric) !important;
+  border-color: var(--edp-electric) !important;
+  color: var(--edp-marine) !important;
+  --mdc-filled-button-hover-state-layer-color: transparent !important;
+  --mdc-filled-button-hover-state-layer-opacity: 0 !important;
+  --mdc-outlined-button-hover-state-layer-color: transparent !important;
+  --mdc-outlined-button-hover-state-layer-opacity: 0 !important;
+  --mat-ripple-color: transparent !important;
+}
+
+button[mat-flat-button] .mdc-button__label,
+a[mat-flat-button] .mdc-button__label,
+button[mat-stroked-button] .mdc-button__label,
+a[mat-stroked-button] .mdc-button__label,
+button[mat-flat-button] .mat-icon,
+a[mat-flat-button] .mat-icon,
+button[mat-stroked-button] .mat-icon,
+a[mat-stroked-button] .mat-icon {
+  color: inherit !important;
+}
+
+button[mat-flat-button]:hover,
+a[mat-flat-button]:hover,
+button[mat-stroked-button]:hover,
+a[mat-stroked-button]:hover {
+  --mdc-filled-button-container-color: var(--edp-marine) !important;
+  --mdc-filled-button-label-text-color: #ffffff !important;
+  --mdc-outlined-button-container-color: var(--edp-marine) !important;
+  --mdc-outlined-button-label-text-color: #ffffff !important;
+  --mdc-outlined-button-outline-color: var(--edp-marine) !important;
+  background: var(--edp-marine) !important;
+  border-color: var(--edp-marine) !important;
+  color: #ffffff !important;
+}
+
+button[mat-flat-button]:hover .mat-mdc-button-persistent-ripple::before,
+a[mat-flat-button]:hover .mat-mdc-button-persistent-ripple::before,
+button[mat-stroked-button]:hover .mat-mdc-button-persistent-ripple::before,
+a[mat-stroked-button]:hover .mat-mdc-button-persistent-ripple::before {
+  opacity: 0 !important;
+}
+
+.mat-mdc-card {
+  --mat-card-elevated-container-color: var(--mat-sys-surface);
+  --mat-card-outlined-container-color: var(--mat-sys-surface);
+  --mat-card-outlined-outline-color: var(--mat-sys-outline-variant);
+  --mat-card-title-text-font: "Space Grotesk", sans-serif;
+  --mat-card-subtitle-text-color: var(--mat-sys-on-surface-variant);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px !important;
+  box-shadow: var(--edp-shadow) !important;
+}
+
+.mat-mdc-card-header {
+  padding: 22px 22px 0 !important;
+}
+
+.mat-mdc-card-content {
+  padding: 18px 22px 22px !important;
+}
+
+.mat-mdc-card-title {
+  color: var(--edp-ink);
+  font-weight: 700 !important;
+  letter-spacing: 0;
+}
+
+.mat-mdc-button-base {
+  border-radius: 0 !important;
+}
+
+/* Icon-only controls (calendar and chat close) use the same clean EDP hover. */
+.mat-mdc-icon-button {
+  --mat-icon-button-state-layer-color: transparent !important;
+  --mat-icon-button-hover-state-layer-opacity: 0 !important;
+  color: var(--edp-marine) !important;
+  background: var(--edp-surface) !important;
+}
+
+.mat-mdc-icon-button:hover,
+.mat-mdc-icon-button:focus-visible {
+  color: var(--edp-marine) !important;
+  background: var(--edp-bg) !important;
+}
+
+/* Secondary actions use the light neutral EDP surface; primary actions keep
+   the electric-green emphasis. */
+button[mat-stroked-button],
+a[mat-stroked-button] {
+  --mdc-outlined-button-container-color: var(--edp-bg) !important;
+  --mdc-outlined-button-label-text-color: var(--edp-marine) !important;
+  --mdc-outlined-button-outline-color: var(--edp-line) !important;
+  background: var(--edp-bg) !important;
+  border-color: var(--edp-line) !important;
+  color: var(--edp-marine) !important;
+}
+
+button[mat-stroked-button]:hover,
+a[mat-stroked-button]:hover {
+  --mdc-outlined-button-container-color: var(--edp-marine) !important;
+  --mdc-outlined-button-label-text-color: #ffffff !important;
+  --mdc-outlined-button-outline-color: var(--edp-marine) !important;
+  background: var(--edp-marine) !important;
+  border-color: var(--edp-marine) !important;
+  color: #ffffff !important;
+}
+
+.topbar .nav-links a.active-link,
+.topbar .nav-links a.active-link:hover,
+.topbar .nav-links a.active-link:focus,
+.topbar .nav-links a.active-link:focus-visible,
+.topbar .nav-links a.active-link:active {
+  --mdc-text-button-label-text-color: var(--edp-marine) !important;
+  --mdc-text-button-hover-label-text-color: var(--edp-marine) !important;
+  --mdc-text-button-focus-label-text-color: var(--edp-marine) !important;
+  --mdc-text-button-pressed-label-text-color: var(--edp-marine) !important;
+  --mdc-text-button-hover-state-layer-color: transparent !important;
+  --mdc-text-button-focus-state-layer-color: transparent !important;
+  --mdc-text-button-pressed-state-layer-color: transparent !important;
+  background: #fff !important;
+  color: var(--edp-marine) !important;
+}
+
+.topbar .nav-links a.active-link .mdc-button__label,
+.topbar .nav-links a.active-link .mdc-button__label > *,
+.topbar .nav-links a.active-link .mat-icon,
+.topbar .nav-links a.active-link:hover .mdc-button__label,
+.topbar .nav-links a.active-link:hover .mdc-button__label > *,
+.topbar .nav-links a.active-link:hover .mat-icon,
+.topbar .nav-links a.active-link:focus .mdc-button__label,
+.topbar .nav-links a.active-link:focus .mat-icon {
+  color: var(--edp-marine) !important;
+}
+
+/* Angular Material paints the text-button surface on a persistent-ripple
+   pseudo-element. Keep that layer transparent so the header state uses the
+   explicit white surface above, including on the active route. */
+.topbar .nav-links a .mat-mdc-button-persistent-ripple::before,
+.topbar .nav-links a .mat-mdc-button-persistent-ripple::after,
+.topbar .nav-links a .mdc-button__ripple::before,
+.topbar .nav-links a .mdc-button__ripple::after {
+  background-color: transparent !important;
+  opacity: 0 !important;
+}
+
+.mat-mdc-card-subtitle {
+  color: var(--edp-muted) !important;
+}
+
+.mat-mdc-form-field {
+  --mat-form-field-container-height: 44px;
+  --mat-form-field-container-vertical-padding: 10px;
+  --mat-form-field-outlined-container-shape: var(--mat-sys-corner-small);
+  --mat-form-field-outlined-outline-color: var(--mat-sys-outline);
+  --mat-form-field-outlined-hover-outline-color: var(--mat-sys-secondary);
+  --mat-form-field-outlined-focus-outline-color: var(--mat-sys-primary);
+  --mat-form-field-outlined-label-text-color: var(--mat-sys-on-surface-variant);
+  --mat-form-field-outlined-focus-label-text-color: var(--mat-sys-primary);
+  --mat-form-field-outlined-input-text-color: var(--mat-sys-on-surface);
+  --mat-form-field-outlined-input-text-placeholder-color: var(--mat-sys-on-surface-variant);
+  --mdc-outlined-text-field-focus-outline-color: var(--mat-sys-primary);
+  --mdc-outlined-text-field-focus-label-text-color: var(--mat-sys-primary);
+  --mdc-outlined-text-field-outline-color: var(--mat-sys-outline);
+  --mdc-outlined-text-field-container-shape: var(--mat-sys-corner-small);
+  background: var(--edp-surface);
+}
+
+.mat-mdc-select {
+  --mat-select-enabled-trigger-text-color: var(--mat-sys-on-surface);
+  --mat-select-placeholder-text-color: var(--mat-sys-on-surface-variant);
+  --mat-select-enabled-arrow-color: var(--mat-sys-on-surface-variant);
+  --mat-select-focused-arrow-color: var(--mat-sys-primary);
+  --mat-select-panel-background-color: var(--mat-sys-surface);
+  --mat-select-container-elevation-shadow: var(--edp-shadow);
+}
+
+.mat-mdc-text-field-wrapper {
+  background: var(--edp-surface) !important;
+}
+
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.edp-select-panel {
+  background: var(--edp-surface) !important;
+  border: 1px solid var(--edp-line);
+  box-shadow: var(--edp-shadow) !important;
+}
+
+/* Date pickers render in the CDK overlay, so they need an explicit surface
+   rather than inheriting the transparent page backdrop. */
+.mat-datepicker-content,
+.mat-datepicker-content-container,
+.mat-calendar {
+  --mat-datepicker-calendar-container-background-color: var(--edp-surface);
+  --mat-datepicker-calendar-container-text-color: var(--edp-ink);
+  --mat-datepicker-calendar-header-text-color: var(--edp-ink);
+  --mat-datepicker-calendar-header-divider-color: var(--edp-line);
+  --mat-datepicker-calendar-date-text-color: var(--edp-ink);
+  --mat-datepicker-calendar-date-disabled-state-text-color: var(--edp-slate);
+  --mat-datepicker-calendar-date-selected-state-background-color: var(--edp-green);
+  --mat-datepicker-calendar-date-selected-state-text-color: var(--edp-marine);
+  --mat-datepicker-calendar-date-today-outline-color: var(--edp-marine);
+  background: var(--edp-surface) !important;
+  color: var(--edp-ink) !important;
+}
+
+.mat-datepicker-content {
+  border: 1px solid var(--edp-line);
+  box-shadow: var(--edp-shadow) !important;
+}
+
+.mat-calendar {
+  border-radius: 0 !important;
+}
+
+.mat-calendar-header {
+  background: var(--edp-bg-panel) !important;
+  border-bottom: 1px solid var(--edp-line);
+}
+
+.mat-calendar-body-cell-content {
+  color: var(--edp-ink) !important;
+}
+
+.mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover .mat-calendar-body-cell-content,
+.mat-calendar-body-cell:focus .mat-calendar-body-cell-content {
+  background: var(--edp-soft-green) !important;
+  color: var(--edp-marine) !important;
+}
+
+.mat-calendar-body-selected {
+  background: var(--edp-green) !important;
+  color: var(--edp-marine) !important;
+}
+
+.mat-mdc-option,
+.edp-select-panel .mat-mdc-option {
+  background: var(--edp-surface) !important;
+  color: var(--edp-ink) !important;
+}
+
+.mat-mdc-option:hover,
+.mat-mdc-option.mdc-list-item--selected,
+.edp-select-panel .mat-mdc-option:hover,
+.edp-select-panel .mat-mdc-option.mdc-list-item--selected {
+  background: var(--edp-soft-green) !important;
+}
+
+.mat-mdc-select-value,
+.mat-mdc-input-element,
+textarea.mat-mdc-input-element {
+  color: var(--edp-ink) !important;
+}
+
+.mat-mdc-table {
+  background: var(--edp-surface) !important;
+}
+
+.mat-mdc-header-row {
+  background: var(--edp-bg-panel) !important;
+}
+
+.mat-mdc-header-cell {
+  color: var(--edp-ink) !important;
+  font-weight: 700 !important;
+}
+
+.mat-mdc-cell {
+  color: var(--edp-muted) !important;
+}
+
+.mat-mdc-row:hover {
+  background: var(--edp-soft-teal) !important;
+}
+
+.page-header {
+  padding: 22px 0 26px;
+  border-bottom: 1px solid var(--edp-line);
+}
+
+.page-header h1 {
+  color: var(--edp-ink);
+  font-size: clamp(2rem, 4vw, 3.1rem) !important;
+  font-weight: 700 !important;
+}
+
+.eyebrow {
+  color: var(--edp-green) !important;
+}
+
+.content-grid,
+.settings-grid {
+  align-items: start;
+}
+
+.error-card {
+  border-left: 5px solid var(--edp-red) !important;
+}
+
+.success-card {
+  border-left: 5px solid var(--edp-green) !important;
+}

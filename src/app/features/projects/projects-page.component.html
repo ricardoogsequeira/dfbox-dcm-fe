@@ -1,0 +1,216 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">{{ 'Portfolio' | t }}</p>
+    <h1>{{ 'Projetos' | t }}</h1>
+    <p>{{ 'Cria e consulta iniciativas que podem receber alocação semanal de developers.' | t }}</p>
+  </div>
+  <button mat-stroked-button type="button" (click)="loadProjects()">{{ 'Atualizar' | t }}</button>
+</section>
+
+@if (error()) {
+  <mat-card class="error-card">{{ error() }}</mat-card>
+}
+
+<mat-card class="import-card">
+  <mat-card-content>
+    <div class="import-copy"><span class="import-kicker">{{ 'Importação em massa' | t }}</span><strong>{{ 'Adiciona o portfolio a partir de CSV' | t }}</strong><span>Usa o código como identificador. Projetos existentes serão atualizados. Datas aceites: YYYY-M-D ou YYYY-MM-DD.</span></div>
+    <div class="import-actions"><button mat-stroked-button type="button" (click)="downloadTemplate()">Descarregar template</button><label class="file-picker"><input type="file" accept=".csv,text/csv" (change)="onFileSelected($event)" />{{ selectedFile?.name || 'Escolher CSV' }}</label><button mat-flat-button type="button" [disabled]="!selectedFile || importing()" (click)="previewImport()">Validar ficheiro</button></div>
+  </mat-card-content>
+</mat-card>
+@if (importError()) { <mat-card class="error-card import-error">{{ importError() }}</mat-card> }
+@if (importPreview(); as preview) {
+  <mat-card class="preview-card"><mat-card-content><div><strong>{{ preview.total }} linhas</strong><span>{{ preview.creates }} novas · {{ preview.updates }} atualizações</span></div><div class="preview-actions"><span [class.invalid]="preview.issues.length > 0">{{ preview.issues.length ? preview.issues.length + ' erros a corrigir' : 'Pronto a importar' }}</span><button mat-flat-button type="button" [disabled]="preview.issues.length > 0 || importing()" (click)="commitImport()">Importar agora</button></div></mat-card-content>@if (preview.issues.length > 0) { <div class="issues"><div><strong>Linha</strong><strong>Campo</strong><strong>Problema</strong></div>@for (issue of preview.issues.slice(0, 8); track issue.row + issue.field) { <div><span>{{ issue.row }}</span><span>{{ issue.field }}</span><span>{{ issue.message }}</span></div> }</div> }</mat-card>
+}
+
+<section class="content-grid">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ 'Novo projeto' | t }}</mat-card-title>
+      <mat-card-subtitle>Campos alinhados com o modelo de domínio</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline">
+          <mat-label>Código</mat-label>
+          <input matInput formControlName="code" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nome</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="span-2">
+          <mat-label>{{ 'Descrição do projeto' | t }}</mat-label>
+          <textarea matInput rows="3" formControlName="description"></textarea>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Área</mat-label>
+          <mat-select panelClass="edp-select-panel" formControlName="business_area">
+            @for (item of businessAreas; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tipo</mat-label>
+          <mat-select panelClass="edp-select-panel" formControlName="project_type">
+            @for (item of projectTypes; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Estado</mat-label>
+          <mat-select panelClass="edp-select-panel" formControlName="lifecycle_state">
+            @for (item of lifecycleStates; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Prioridade</mat-label>
+          <mat-select panelClass="edp-select-panel" formControlName="priority">
+            @for (item of priorities; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Delivery</mat-label>
+          <mat-select panelClass="edp-select-panel" formControlName="delivery_model">
+            @for (item of deliveryModels; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Início</mat-label>
+          <input matInput [matDatepicker]="projectStartPicker" formControlName="start_date" />
+          <mat-datepicker-toggle matIconSuffix [for]="projectStartPicker"></mat-datepicker-toggle>
+          <mat-datepicker #projectStartPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Target</mat-label>
+          <input matInput [matDatepicker]="projectEndPicker" formControlName="target_end_date" />
+          <mat-datepicker-toggle matIconSuffix [for]="projectEndPicker"></mat-datepicker-toggle>
+          <mat-datepicker #projectEndPicker></mat-datepicker>
+        </mat-form-field>
+
+        <button mat-flat-button type="submit" [disabled]="saving()">{{ 'Criar projeto' | t }}</button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ 'Projetos registados' | t }}</mat-card-title>
+      <mat-card-subtitle>{{ filteredProjects().length }} de {{ projects().length }} projeto(s)</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-form-field class="project-search" appearance="outline">
+        <mat-label>Pesquisar por código ou nome</mat-label>
+        <input matInput type="search" placeholder="Ex.: BB6.065 ou Cloud.IA" (input)="updateProjectSearch($event)" />
+      </mat-form-field>
+      @if (loading()) {
+        <mat-spinner diameter="32" />
+      } @else if (error()) {
+        <div class="data-error"><strong>Não foi possível carregar os projetos.</strong><span>Confirma que a base de dados está disponível e tenta novamente.</span><button mat-stroked-button type="button" (click)="loadProjects()">Tentar novamente</button></div>
+      } @else if (projects().length === 0) {
+        <p class="empty-state">Ainda não existem projetos.</p>
+      } @else if (filteredProjects().length === 0) {
+        <p class="empty-state">Não existem projetos que correspondam à pesquisa.</p>
+      } @else {
+        <div class="table-scroll"><table mat-table matSort [dataSource]="filteredProjects()" (matSortChange)="onProjectSortChange($event)">
+          <ng-container matColumnDef="code"><th mat-header-cell *matHeaderCellDef mat-sort-header>Código</th><td mat-cell *matCellDef="let row"><a class="project-link" [routerLink]="['/projects', row.id]"><strong>{{ row.code }}</strong></a></td></ng-container>
+          <ng-container matColumnDef="name"><th mat-header-cell *matHeaderCellDef mat-sort-header>Nome</th><td mat-cell *matCellDef="let row"><a class="project-link" [routerLink]="['/projects', row.id]">{{ row.name }}</a></td></ng-container>
+          <ng-container matColumnDef="developers"><th mat-header-cell *matHeaderCellDef mat-sort-header>Developers associados</th><td mat-cell *matCellDef="let row">
+            @if (developerNamesForProject(row.id); as developers) {
+              @if (developers.length > 0) {
+                <div class="developer-list">
+                  @for (developer of developers; track developer) { <span class="developer-chip">{{ developer }}</span> }
+                </div>
+              } @else { <span class="no-developers">—</span> }
+            }
+          </td></ng-container>
+          <ng-container matColumnDef="type"><th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th><td mat-cell *matCellDef="let row">{{ enumLabel(row.project_type) }}</td></ng-container>
+          <ng-container matColumnDef="state"><th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th><td mat-cell *matCellDef="let row">{{ enumLabel(row.lifecycle_state) }}</td></ng-container>
+          <ng-container matColumnDef="delivery"><th mat-header-cell *matHeaderCellDef mat-sort-header>Delivery</th><td mat-cell *matCellDef="let row">{{ enumLabel(row.delivery_model) }}</td></ng-container>
+          <ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef>Ações</th><td mat-cell *matCellDef="let row"><button class="delete-project-button" mat-stroked-button type="button" (click)="deleteProject(row)">Apagar</button></td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table></div>
+      }
+      <p class="selection-hint">Clica no código ou no nome para abrir a ficha do projeto.</p>
+    </mat-card-content>
+  </mat-card>
+</section>
+
+@if (selectedProject(); as project) {
+  <section class="dependency-section">
+    <mat-card class="dependency-card">
+      <mat-card-header>
+        <mat-card-title>Dependências · {{ project.code }}</mat-card-title>
+        <mat-card-subtitle>{{ project.name }} · regista impedimentos que podem colocar o projeto em risco.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (dependencyError()) { <div class="dependency-error">{{ dependencyError() }}</div> }
+        @if (dependencyLoading()) { <mat-spinner diameter="30" /> }
+        @else if (dependencies().length === 0) { <p class="empty-state">Ainda não existem dependências registadas para este projeto.</p> }
+        @else {
+          <div class="dependency-list">
+            @for (dependency of dependencies(); track dependency.id) {
+              <article class="dependency-item" [class.blocking]="isBlockingDependency(dependency)">
+                <div class="dependency-main">
+                  <strong>{{ dependency.title }}</strong>
+                  <span>{{ dependency.description }}</span>
+                  <small>{{ enumLabel(dependency.dependency_type) }} · alvo {{ dependency.target_date }} · impacto {{ enumLabel(dependency.impact_level) }}</small>
+                </div>
+                <div class="dependency-actions">
+                  @if (isBlockingDependency(dependency)) { <span class="blocking-badge">Bloqueante</span> }
+                  <span class="dependency-status">{{ enumLabel(dependency.status) }}</span>
+                  <button mat-stroked-button type="button" (click)="editDependency(dependency)">Editar</button>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dependency-card">
+      <mat-card-header><mat-card-title>{{ editingDependencyId() ? 'Editar dependência' : 'Nova dependência' }}</mat-card-title><mat-card-subtitle>{{ editingDependencyId() ? 'Atualiza o estado, impacto, datas ou plano de mitigação.' : 'Adiciona um impedimento ou condição externa ao projeto.' }}</mat-card-subtitle></mat-card-header>
+      <mat-card-content><form class="dependency-form" [formGroup]="dependencyForm" (ngSubmit)="submitDependency()">
+        <mat-form-field appearance="outline"><mat-label>Tipo</mat-label><mat-select panelClass="edp-select-panel" formControlName="dependency_type">@for (type of dependencyTypes; track type) { <mat-option [value]="type">{{ enumLabel(type) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Impacto</mat-label><mat-select panelClass="edp-select-panel" formControlName="impact_level">@for (level of impactLevels; track level) { <mat-option [value]="level">{{ enumLabel(level) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Estado</mat-label><mat-select panelClass="edp-select-panel" formControlName="status">@for (status of dependencyStatuses; track status) { <mat-option [value]="status">{{ enumLabel(status) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Título da dependência</mat-label><input matInput formControlName="title" /><mat-error>Indica um título para a dependência.</mat-error></mat-form-field>
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Descrição da dependência</mat-label><textarea matInput rows="2" formControlName="description"></textarea><mat-error>Indica uma descrição para a dependência.</mat-error></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Início</mat-label><input matInput type="date" formControlName="start_date" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Data alvo</mat-label><input matInput type="date" formControlName="target_date" /></mat-form-field>
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Plano de mitigação</mat-label><textarea matInput rows="2" formControlName="mitigation_plan"></textarea></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Referência externa</mat-label><input matInput formControlName="external_reference" /></mat-form-field>
+        <div class="dependency-form-actions"><button mat-flat-button type="submit" [disabled]="dependencySaving()">{{ editingDependencyId() ? 'Guardar alterações' : 'Adicionar dependência' }}</button>@if (editingDependencyId()) { <button mat-stroked-button type="button" (click)="cancelDependencyEdit()">Cancelar</button> }</div>
+      </form></mat-card-content>
+    </mat-card>
+
+    <mat-card class="key-people-card">
+      <mat-card-header><mat-card-title>Key people do projeto</mat-card-title><mat-card-subtitle>Roles opcionais associados ao projeto. Começa a escrever para procurar nas pessoas já criadas.</mat-card-subtitle></mat-card-header>
+      <mat-card-content>
+        @if (keyPeopleError()) { <div class="dependency-error">{{ keyPeopleError() }}</div> }
+        @if (keyPeopleLoading()) { <mat-spinner diameter="30" /> }
+        @else {
+          <form class="key-people-form" [formGroup]="keyPeopleForm" (ngSubmit)="saveKeyPeople()">
+            @for (role of projectRoles; track role) {
+              <mat-form-field appearance="outline">
+                <mat-label>{{ enumLabel(role) }}</mat-label>
+                <input matInput [formControlName]="role" [matAutocomplete]="peopleAutocomplete" />
+                <mat-autocomplete #peopleAutocomplete="matAutocomplete" [displayWith]="displayPerson">
+                  @for (person of filteredPeople(role); track person.id) { <mat-option [value]="person">{{ person.name }}{{ person.email ? ' · ' + person.email : '' }}</mat-option> }
+                </mat-autocomplete>
+              </mat-form-field>
+            }
+            <div class="key-people-actions"><button mat-flat-button type="submit" [disabled]="keyPeopleSaving()">Guardar key people</button>@if (keyPeopleSaved()) { <span>Guardado.</span> }</div>
+          </form>
+        }
+      </mat-card-content>
+    </mat-card>
+  </section>
+}

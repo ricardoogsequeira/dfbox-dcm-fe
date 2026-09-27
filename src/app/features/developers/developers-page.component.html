@@ -1,0 +1,95 @@
+<section class="page-header">
+  <div><p class="eyebrow">Resources</p><h1>{{ 'Developers' | t }}</h1><p>{{ 'Gere developers planeáveis, disciplina, função e capacidade semanal base.' | t }}</p></div>
+  <button mat-stroked-button type="button" (click)="loadDevelopers()">{{ 'Atualizar' | t }}</button>
+</section>
+@if (error()) { <mat-card class="error-card">{{ error() }}</mat-card> }
+<mat-card class="import-card">
+  <mat-card-content>
+    <div class="import-copy"><span class="import-kicker">Importação em massa</span><strong>Adiciona a equipa a partir de CSV</strong><span>Usa o email como identificador. Linhas existentes serão atualizadas.</span></div>
+    <div class="import-actions">
+      <button mat-stroked-button type="button" (click)="downloadTemplate()">Descarregar template</button>
+      <label class="file-picker"><input type="file" accept=".csv,text/csv" (change)="onFileSelected($event)" />{{ selectedFile?.name || 'Escolher CSV' }}</label>
+      <button mat-flat-button type="button" [disabled]="!selectedFile || importing()" (click)="previewImport()">Validar ficheiro</button>
+    </div>
+  </mat-card-content>
+</mat-card>
+@if (importError()) { <mat-card class="error-card import-error">{{ importError() }}</mat-card> }
+@if (importPreview(); as preview) {
+  <mat-card class="preview-card">
+    <mat-card-content><div><strong>{{ preview.total }} linhas</strong><span>{{ preview.creates }} novas · {{ preview.updates }} atualizações</span></div><div class="preview-actions"><span [class.invalid]="preview.issues.length > 0">{{ preview.issues.length ? preview.issues.length + ' erros a corrigir' : 'Pronto a importar' }}</span><button mat-flat-button type="button" [disabled]="preview.issues.length > 0 || importing()" (click)="commitImport()">Importar agora</button></div></mat-card-content>
+    @if (preview.issues.length > 0) { <div class="issues"><div><strong>Linha</strong><strong>Campo</strong><strong>Problema</strong></div>@for (issue of preview.issues.slice(0, 8); track issue.row + issue.field) { <div><span>{{ issue.row }}</span><span>{{ issue.field }}</span><span>{{ issue.message }}</span></div> }</div> }
+  </mat-card>
+}
+<section class="content-grid">
+  <mat-card>
+    <mat-card-header><mat-card-title>Novo developer</mat-card-title><mat-card-subtitle>Recurso disponível para alocação</mat-card-subtitle></mat-card-header>
+    <mat-card-content>
+      <form class="entity-form" [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Empresa</mat-label><input matInput formControlName="company" placeholder="EDP" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Disciplina</mat-label><mat-select panelClass="edp-select-panel" formControlName="discipline">@for (item of disciplines; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select panelClass="edp-select-panel" formControlName="role_type">@for (item of roleTypes; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Especialização</mat-label><input matInput formControlName="specialization" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Senioridade</mat-label><input matInput formControlName="seniority" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Capacidade %</mat-label><input matInput type="number" formControlName="default_weekly_capacity" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Estado</mat-label><mat-select panelClass="edp-select-panel" formControlName="status">@for (item of statuses; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+        <div class="skill-inline-form"><strong>Skill inicial (opcional)</strong><div><mat-form-field appearance="outline"><mat-label>Skill</mat-label><mat-select panelClass="edp-select-panel" formControlName="initial_skill_id"><mat-option value="">Sem skill inicial</mat-option>@for (skill of skills(); track skill.id) { <mat-option [value]="skill.id">{{ skill.name }}</mat-option> }</mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>Nível</mat-label><input matInput type="number" formControlName="initial_skill_level" /></mat-form-field></div><small>Se o catálogo estiver vazio, cria uma skill no bloco abaixo.</small></div>
+        <div class="new-skill-inline"><strong>Adicionar skill ao catálogo</strong><div><mat-form-field appearance="outline"><mat-label>Nome da skill</mat-label><input matInput [formControl]="newSkillForm.controls.name" /></mat-form-field><mat-form-field appearance="outline"><mat-label>Categoria</mat-label><input matInput [formControl]="newSkillForm.controls.category" /></mat-form-field><button mat-stroked-button type="button" (click)="createSkill()" [disabled]="metadataSaving()">Criar skill</button></div></div>
+        <button mat-flat-button type="submit" [disabled]="saving()">Criar developer</button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+  <mat-card>
+      <mat-card-header><mat-card-title>{{ 'Developers registados' | t }}</mat-card-title><mat-card-subtitle>{{ filteredDevelopers().length }} de {{ developers().length }} developer(s)</mat-card-subtitle></mat-card-header>
+    <mat-card-content>
+      <mat-form-field class="developer-search" appearance="outline"><mat-label>Pesquisar developer</mat-label><input matInput type="search" placeholder="Nome ou email" (input)="updateDeveloperSearch($event)" /></mat-form-field>
+      @if (loading()) { <mat-spinner diameter="32" /> } @else if (error()) { <div class="data-error"><strong>Não foi possível carregar os developers.</strong><span>Confirma que a base de dados está disponível e tenta novamente.</span><button mat-stroked-button type="button" (click)="loadDevelopers()">Tentar novamente</button></div> } @else if (developers().length === 0) { <p class="empty-state">Ainda não existem developers.</p> } @else if (filteredDevelopers().length === 0) { <p class="empty-state">Não existem developers que correspondam à pesquisa.</p> } @else {
+        <div class="table-scroll"><table mat-table matSort [dataSource]="filteredDevelopers()" (matSortChange)="onDeveloperSortChange($event)">
+          <ng-container matColumnDef="name"><th mat-header-cell *matHeaderCellDef mat-sort-header>Nome</th><td mat-cell *matCellDef="let row"><button class="developer-name-button" type="button" (click)="openDeveloperEditor(row)">{{ row.name }}</button></td></ng-container>
+          <ng-container matColumnDef="company"><th mat-header-cell *matHeaderCellDef mat-sort-header>Empresa</th><td mat-cell *matCellDef="let row">{{ row.company || 'Não definida' }}</td></ng-container>
+          <ng-container matColumnDef="projects"><th mat-header-cell *matHeaderCellDef mat-sort-header>Projetos associados</th><td mat-cell *matCellDef="let row">@if (projectNamesForDeveloper(row.id); as projects) { @if (projects.length > 0) { <div class="project-list">@for (project of projects; track project) { <span class="project-chip">{{ project }}</span> }</div> } @else { <span class="no-projects">—</span> } }</td></ng-container>
+          <ng-container matColumnDef="discipline"><th mat-header-cell *matHeaderCellDef mat-sort-header>Disciplina</th><td mat-cell *matCellDef="let row">{{ enumLabel(row.discipline) }}</td></ng-container>
+          <ng-container matColumnDef="role"><th mat-header-cell *matHeaderCellDef mat-sort-header>Role</th><td mat-cell *matCellDef="let row">{{ enumLabel(row.role_type) }}</td></ng-container>
+          <ng-container matColumnDef="capacity"><th mat-header-cell *matHeaderCellDef mat-sort-header>Cap.</th><td mat-cell *matCellDef="let row">{{ row.default_weekly_capacity }}%</td></ng-container>
+          <ng-container matColumnDef="status"><th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th><td mat-cell *matCellDef="let row">{{ enumLabel(row.status) }}</td></ng-container>
+          <ng-container matColumnDef="actions"><th mat-header-cell *matHeaderCellDef>Ações</th><td mat-cell *matCellDef="let row"><button mat-stroked-button type="button" (click)="openDeveloperEditor(row)">Editar</button></td></ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr><tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table></div>
+      }
+    </mat-card-content>
+  </mat-card>
+</section>
+@if (editingDeveloper(); as developer) {
+  <div class="developer-modal-backdrop" (click)="closeDeveloperEditor()">
+    <section class="developer-modal" role="dialog" aria-modal="true" aria-labelledby="developer-edit-title" (click)="$event.stopPropagation()">
+      <div class="developer-modal-header"><div><p class="eyebrow">Developer</p><h2 id="developer-edit-title">Editar {{ developer.name }}</h2></div><button mat-stroked-button type="button" (click)="closeDeveloperEditor()" [disabled]="editSaving()">Fechar</button></div>
+      @if (editError()) { <div class="error-card metadata-error">{{ editError() }}</div> }
+      <form class="edit-developer-form" [formGroup]="editForm" (ngSubmit)="saveDeveloper()">
+        <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Empresa</mat-label><input matInput formControlName="company" placeholder="EDP" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" formControlName="email" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Disciplina</mat-label><mat-select panelClass="edp-select-panel" formControlName="discipline">@for (item of disciplines; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select panelClass="edp-select-panel" formControlName="role_type">@for (item of roleTypes; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Especialização</mat-label><input matInput formControlName="specialization" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Senioridade</mat-label><input matInput formControlName="seniority" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Capacidade %</mat-label><input matInput type="number" formControlName="default_weekly_capacity" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Estado</mat-label><mat-select panelClass="edp-select-panel" formControlName="status">@for (item of statuses; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+        <section class="developer-skills-editor"><h3>Skills</h3>@if (resourceSkills().length === 0) { <p class="empty-state">Ainda não existem skills associadas.</p> } @else { <div class="metadata-list">@for (item of resourceSkills(); track item.id) { <span>{{ skillName(item.skill_id) }} · nível {{ item.level }}/5</span> }</div> }<div class="metadata-form" [formGroup]="skillForm"><mat-form-field appearance="outline"><mat-label>Skill</mat-label><mat-select panelClass="edp-select-panel" formControlName="skill_id"><mat-option value="">Selecionar</mat-option>@for (skill of skills(); track skill.id) { <mat-option [value]="skill.id">{{ skill.name }}</mat-option> }</mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>Nível (1–5)</mat-label><input matInput type="number" formControlName="level" /></mat-form-field><button mat-stroked-button type="button" (click)="addSkill()" [disabled]="metadataSaving()">Associar skill</button></div><div class="new-skill-modal-form"><mat-form-field appearance="outline"><mat-label>Nova skill</mat-label><input matInput [formControl]="newSkillForm.controls.name" /></mat-form-field><mat-form-field appearance="outline"><mat-label>Categoria</mat-label><input matInput [formControl]="newSkillForm.controls.category" /></mat-form-field><button mat-stroked-button type="button" (click)="createSkill()" [disabled]="metadataSaving()">Criar skill</button></div></section>
+        <div class="developer-modal-actions"><button mat-stroked-button type="button" (click)="closeDeveloperEditor()" [disabled]="editSaving()">Cancelar</button><button mat-flat-button type="submit" [disabled]="editSaving()">{{ editSaving() ? 'A guardar…' : 'Guardar alterações' }}</button></div>
+      </form>
+    </section>
+  </div>
+}
+<mat-card class="metadata-card">
+  <mat-card-header><mat-card-title>Disponibilidade semanal</mat-card-title><mat-card-subtitle>Exceções à capacidade base do developer selecionado.</mat-card-subtitle></mat-card-header>
+  <mat-card-content>
+    <mat-form-field appearance="outline" class="developer-picker"><mat-label>Developer</mat-label><mat-select panelClass="edp-select-panel" [value]="selectedDeveloperId() || ''" (selectionChange)="selectDeveloper($event.value)"><mat-option value="">Selecionar developer</mat-option>@for (developer of developers(); track developer.id) { <mat-option [value]="developer.id">{{ developer.name }}</mat-option> }</mat-select></mat-form-field>
+    @if (metadataError()) { <div class="error-card metadata-error">{{ metadataError() }}</div> }
+    @if (selectedDeveloperId()) {
+      <div class="metadata-grid">
+        <section><h3>Exceções de disponibilidade</h3>@if (availability().length === 0) { <p class="empty-state">Ainda não existem exceções de disponibilidade.</p> } @else { <div class="metadata-list">@for (item of availability(); track item.id) { <span>{{ item.calendar_week_id }} · {{ item.available_percentage }}%@if (item.reason) { · {{ item.reason }} }</span> }</div> }<form class="metadata-form" [formGroup]="availabilityForm" (ngSubmit)="saveAvailability()"><mat-form-field appearance="outline"><mat-label>Semana ISO</mat-label><mat-select panelClass="edp-select-panel" formControlName="calendar_week_id"><mat-option value="">Selecionar semana</mat-option>@for (week of weeks(); track week.id) { <mat-option [value]="week.id">{{ week.iso_year }}-W{{ week.iso_week }} · {{ week.start_date }}</mat-option> }</mat-select></mat-form-field><mat-form-field appearance="outline"><mat-label>Disponibilidade %</mat-label><input matInput type="number" formControlName="available_percentage" /></mat-form-field><mat-form-field appearance="outline"><mat-label>Motivo</mat-label><input matInput formControlName="reason" /></mat-form-field><button mat-flat-button type="submit" [disabled]="metadataSaving()">Guardar disponibilidade</button></form></section>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>

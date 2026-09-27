@@ -1,0 +1,42 @@
+<button class="chat-fab" mat-flat-button type="button" (click)="toggle()">
+  <mat-icon>smart_toy</mat-icon>
+  Assistente
+</button>
+
+@if (open()) {
+  <mat-card class="chat-panel">
+    <mat-card-header>
+      <mat-card-title>Assistente GenAI</mat-card-title>
+      <mat-card-subtitle>Projetos, developers e capacidade</mat-card-subtitle>
+      <button mat-icon-button type="button" aria-label="Fechar chat" (click)="toggle()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="messages" aria-live="polite">
+        @for (message of userMessages(); track $index) {
+          <div class="message" [class.user]="message.role === 'user'">
+            <span>{{ message.role === 'user' ? 'Tu' : 'Assistente' }}</span>
+            <p>{{ message.content }}</p>
+          </div>
+        }
+        @if (sending()) {
+          <div class="message pending"><mat-spinner diameter="18" /> A responder...</div>
+        }
+      </div>
+
+      @if (error()) {
+        <p class="chat-error">{{ error() }}</p>
+      }
+
+      <form class="chat-form" [formGroup]="form" (ngSubmit)="send()">
+        <mat-form-field appearance="outline">
+          <mat-label>Mensagem</mat-label>
+          <textarea matInput rows="3" formControlName="prompt"></textarea>
+        </mat-form-field>
+        <button mat-flat-button type="submit" [disabled]="sending()">Enviar</button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+}

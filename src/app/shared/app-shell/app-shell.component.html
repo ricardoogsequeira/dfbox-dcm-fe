@@ -1,0 +1,40 @@
+<mat-toolbar class="topbar">
+  <a class="brand" routerLink="/dashboard" aria-label="Digital Factory DCM dashboard">
+    <img
+      class="brand-logo"
+      src="https://storage.googleapis.com/dsm-edp-prd.appspot.com/dsm-edp-images/global/header.png"
+      alt="EDP"
+    />
+    <span>
+      <strong>Digital Factory</strong>
+      <small>Delivery &amp; Capacity Manager</small>
+    </span>
+  </a>
+
+  <nav class="nav-links" [attr.aria-label]="'Primary navigation' | t">
+    <a mat-button routerLink="/dashboard" routerLinkActive="active-link"><mat-icon>grid_view</mat-icon><span>{{ 'Dashboard' | t }}</span></a>
+    <a mat-button routerLink="/allocations" routerLinkActive="active-link"><mat-icon>insights</mat-icon><span>{{ 'Alocações' | t }}</span></a>
+    <a mat-button routerLink="/projects" routerLinkActive="active-link"><mat-icon>folder_open</mat-icon><span>{{ 'Projetos' | t }}</span></a>
+    <a mat-button routerLink="/developers" routerLinkActive="active-link"><mat-icon>groups</mat-icon><span>{{ 'Developers' | t }}</span></a>
+    <a mat-button routerLink="/settings" routerLinkActive="active-link"><mat-icon>tune</mat-icon><span>{{ 'Configurações' | t }}</span></a>
+  </nav>
+
+  <span class="spacer"></span>
+
+  <button class="language-toggle" mat-stroked-button type="button" [matMenuTriggerFor]="languageMenu" [attr.aria-label]="language.language() === 'pt' ? 'Switch to English' : 'Mudar para português'">{{ language.language().toUpperCase() }}<mat-icon>arrow_drop_down</mat-icon></button>
+  <mat-menu #languageMenu="matMenu">
+    <button mat-menu-item type="button" (click)="switchLanguage()">{{ language.language() === 'pt' ? 'EN' : 'PT' }}</button>
+  </mat-menu>
+
+  @if (auth.state() === 'signed-in') {
+    <button mat-stroked-button type="button" (click)="signOut()">{{ 'Sign out' | t }}</button>
+  } @else if (auth.state() !== 'disabled') {
+    <button mat-flat-button type="button" (click)="signIn()">{{ 'Sign in' | t }}</button>
+  }
+</mat-toolbar>
+
+<main class="main-shell">
+  <router-outlet />
+</main>
+
+<dcm-chat-widget />

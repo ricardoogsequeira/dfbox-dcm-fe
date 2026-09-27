@@ -1,0 +1,151 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Portfolio · Ficha de projeto</p>
+    @if (project(); as currentProject) {
+      <h1>{{ currentProject.code }} · {{ currentProject.name }}</h1>
+      <p>{{ editMode() ? 'Edita a ficha e a composição do projeto.' : 'Descrição, parceiros, key people e dependências.' }}</p>
+    } @else { <h1>Ficha de projeto</h1> }
+  </div>
+  <div class="detail-header-actions"><button mat-stroked-button type="button" (click)="goBack()">Voltar aos projetos</button><button class="edit-project-button" mat-stroked-button type="button" (click)="toggleEditMode()"><mat-icon>{{ editMode() ? 'close' : 'edit' }}</mat-icon>{{ editMode() ? 'Fechar edição' : 'Editar' }}</button></div>
+</section>
+
+@if (loading()) { <mat-spinner diameter="36" /> }
+@else if (error()) { <mat-card class="error-card">{{ error() }}<button mat-stroked-button type="button" (click)="load()">Tentar novamente</button></mat-card> }
+@else if (project(); as currentProject) {
+  <mat-card class="project-summary">
+    <mat-card-header><mat-card-title>{{ currentProject.name }}</mat-card-title><mat-card-subtitle>{{ currentProject.code }}</mat-card-subtitle></mat-card-header>
+    <mat-card-content>
+      @if (editMode()) {
+        <form class="project-description-form" [formGroup]="projectDescriptionForm" (ngSubmit)="saveProjectDescription()">
+          <div class="project-meta-form">
+            <mat-form-field appearance="outline"><mat-label>Área</mat-label><mat-select panelClass="edp-select-panel" formControlName="business_area">@for (item of businessAreas; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Tipo</mat-label><mat-select panelClass="edp-select-panel" formControlName="project_type">@for (item of projectTypes; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Estado</mat-label><mat-select panelClass="edp-select-panel" formControlName="lifecycle_state">@for (item of lifecycleStates; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Prioridade</mat-label><mat-select panelClass="edp-select-panel" formControlName="priority">@for (item of priorities; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Delivery</mat-label><mat-select panelClass="edp-select-panel" formControlName="delivery_model">@for (item of deliveryModels; track item) { <mat-option [value]="item">{{ enumLabel(item) }}</mat-option> }</mat-select></mat-form-field>
+          </div>
+          <mat-form-field appearance="outline"><mat-label>Descrição do projeto</mat-label><textarea matInput rows="4" formControlName="description"></textarea></mat-form-field>
+          <div class="useful-links-edit">
+            <div><h3>Links úteis</h3><p>Referências externas associadas ao projeto.</p></div>
+            <mat-form-field appearance="outline"><mat-label>Card EDPX</mat-label><input matInput type="url" formControlName="edpx_card_url" placeholder="https://..." /><mat-error>Indica um endereço http(s) válido.</mat-error></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Projeto Jira</mat-label><input matInput type="url" formControlName="jira_url" placeholder="https://..." /><mat-error>Indica um endereço http(s) válido.</mat-error></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Confluence</mat-label><input matInput type="url" formControlName="confluence_url" placeholder="https://..." /><mat-error>Indica um endereço http(s) válido.</mat-error></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Figma</mat-label><input matInput type="url" formControlName="figma_url" placeholder="https://..." /><mat-error>Indica um endereço http(s) válido.</mat-error></mat-form-field>
+          </div>
+          <button mat-flat-button type="submit" [disabled]="projectDataSaving()">Guardar ficha</button>
+        </form>
+      } @else {
+        <div class="project-meta-summary"><span><small>Área</small><strong>{{ enumLabel(currentProject.business_area) }}</strong></span><span><small>Tipo</small><strong>{{ enumLabel(currentProject.project_type) }}</strong></span><span><small>Estado</small><strong>{{ enumLabel(currentProject.lifecycle_state) }}</strong></span><span><small>Prioridade</small><strong>{{ enumLabel(currentProject.priority) }}</strong></span><span><small>Delivery</small><strong>{{ enumLabel(currentProject.delivery_model) }}</strong></span></div>
+        <p class="project-description">{{ currentProject.description || 'Sem descrição registada.' }}</p>
+        <section class="useful-links-block" aria-labelledby="useful-links-title">
+          <div class="useful-links-heading"><h3 id="useful-links-title">Links úteis</h3><span>Referências externas do projeto</span></div>
+          <div class="useful-links-list">
+            @if (currentProject.edpx_card_url) { <a [href]="currentProject.edpx_card_url" target="_blank" rel="noopener noreferrer">Card EDPX <span aria-hidden="true">↗</span></a> }
+            @if (currentProject.jira_url) { <a [href]="currentProject.jira_url" target="_blank" rel="noopener noreferrer">Projeto Jira <span aria-hidden="true">↗</span></a> }
+            @if (currentProject.confluence_url) { <a [href]="currentProject.confluence_url" target="_blank" rel="noopener noreferrer">Confluence <span aria-hidden="true">↗</span></a> }
+            @if (currentProject.figma_url) { <a [href]="currentProject.figma_url" target="_blank" rel="noopener noreferrer">Figma <span aria-hidden="true">↗</span></a> }
+          </div>
+          @if (!currentProject.edpx_card_url && !currentProject.jira_url && !currentProject.confluence_url && !currentProject.figma_url) { <p class="empty-state">Ainda não existem links úteis configurados.</p> }
+        </section>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <section class="detail-grid">
+    <mat-card class="dependency-card">
+      <mat-card-header><mat-card-title>Dependências</mat-card-title><mat-card-subtitle>Impedimentos e condições externas associados ao projeto.</mat-card-subtitle></mat-card-header>
+      <mat-card-content>
+        @if (dependencyError()) { <div class="dependency-error">{{ dependencyError() }}</div> }
+        @if (dependencyLoading()) { <mat-spinner diameter="30" /> }
+        @else if (dependencies().length === 0) { <p class="empty-state">Ainda não existem dependências registadas.</p> }
+        @else {
+          <div class="dependency-list">
+            @for (dependency of dependencies(); track dependency.id) {
+              <article class="dependency-item" [class.blocking]="isBlockingDependency(dependency)">
+                <div class="dependency-main"><strong>{{ dependency.title }}</strong><span>{{ dependency.description }}</span><small>{{ enumLabel(dependency.dependency_type) }} · alvo {{ dependency.target_date }} · impacto {{ enumLabel(dependency.impact_level) }}@if (dependency.resolved_date) { · resolvida {{ dependency.resolved_date }} }@if (dependency.is_overdue) { · overdue }@if (dependency.cancellation_reason) { · {{ dependency.cancellation_reason }} }</small></div>
+                <div class="dependency-actions">@if (isBlockingDependency(dependency)) { <span class="blocking-badge">Bloqueante</span> }<span class="dependency-status">{{ enumLabel(dependency.status) }}</span><button class="action-button" mat-stroked-button type="button" (click)="editDependency(dependency)">Editar</button>@if (dependency.status !== 'CANCELLED') { <button class="action-button" mat-stroked-button type="button" (click)="deleteDependency(dependency)">Cancelar</button> }</div>
+              </article>
+            }
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="dependency-card">
+      <mat-card-header><mat-card-title>{{ editingDependencyId() ? 'Editar dependência' : 'Nova dependência' }}</mat-card-title><mat-card-subtitle>Regista um impedimento ou condição externa ao projeto.</mat-card-subtitle></mat-card-header>
+      <mat-card-content><form class="dependency-form" [formGroup]="dependencyForm" (ngSubmit)="submitDependency()">
+        <mat-form-field appearance="outline"><mat-label>Tipo</mat-label><mat-select panelClass="edp-select-panel" formControlName="dependency_type">@for (type of dependencyTypes; track type) { <mat-option [value]="type">{{ enumLabel(type) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Impacto</mat-label><mat-select panelClass="edp-select-panel" formControlName="impact_level">@for (level of impactLevels; track level) { <mat-option [value]="level">{{ enumLabel(level) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Estado</mat-label><mat-select panelClass="edp-select-panel" formControlName="status">@for (status of dependencyStatuses; track status) { <mat-option [value]="status">{{ enumLabel(status) }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Owner</mat-label><mat-select panelClass="edp-select-panel" formControlName="owner_key_person_id"><mat-option value="">Sem owner</mat-option>@for (person of keyPersons(); track person.id) { <mat-option [value]="person.id">{{ person.name }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Título da dependência</mat-label><input matInput formControlName="title" /><mat-error>Indica um título.</mat-error></mat-form-field>
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Descrição da dependência</mat-label><textarea matInput rows="2" formControlName="description"></textarea><mat-error>Indica uma descrição.</mat-error></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Início</mat-label><input matInput type="date" formControlName="start_date" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Data alvo</mat-label><input matInput type="date" formControlName="target_date" /></mat-form-field>
+        @if (isDependencyResolved()) { <mat-form-field appearance="outline"><mat-label>Data de resolução</mat-label><input matInput type="date" formControlName="resolved_date" /></mat-form-field> }
+        @if (isDependencyCancelled()) { <mat-form-field appearance="outline" class="span-2"><mat-label>Motivo do cancelamento</mat-label><textarea matInput rows="2" formControlName="cancellation_reason"></textarea></mat-form-field> }
+        <mat-form-field appearance="outline" class="span-2"><mat-label>Plano de mitigação</mat-label><textarea matInput rows="2" formControlName="mitigation_plan"></textarea></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Referência externa</mat-label><input matInput formControlName="external_reference" /></mat-form-field>
+        <div class="form-actions"><button mat-flat-button type="submit" [disabled]="dependencySaving()">{{ editingDependencyId() ? 'Guardar alterações' : 'Adicionar dependência' }}</button>@if (editingDependencyId()) { <button mat-stroked-button type="button" (click)="cancelDependencyEdit()">Cancelar</button> }</div>
+      </form></mat-card-content>
+    </mat-card>
+  </section>
+
+  <mat-card class="key-people-card">
+    <mat-card-header><mat-card-title>Key people do projeto</mat-card-title><mat-card-subtitle>{{ editMode() ? 'Roles opcionais associados ao projeto. Seleciona pessoas no catálogo configurado.' : 'Roles e pessoas atualmente associados ao projeto.' }}</mat-card-subtitle></mat-card-header>
+    <mat-card-content>
+      @if (keyPeopleError()) { <div class="dependency-error">{{ keyPeopleError() }}</div> }
+      @if (keyPeople().length > 0) {
+        <div class="key-people-summary">
+          <strong>Pessoas atualmente associadas</strong>
+          <div class="key-people-chips">@for (person of keyPeople(); track person.id) { <span><b>{{ enumLabel(person.role) }}</b>{{ person.person_name }}</span> }</div>
+        </div>
+      } @else { <p class="empty-state key-people-empty">Ainda não existem key people associados a este projeto.</p> }
+      @if (editMode()) {
+        @if (keyPeopleLoading()) { <mat-spinner diameter="30" /> }
+        @else { <form class="key-people-form" [formGroup]="keyPeopleForm" (ngSubmit)="saveKeyPeople()">
+        @for (role of projectRoles; track role) {
+          <div class="project-role-field">
+            <mat-form-field appearance="outline"><mat-label>{{ enumLabel(role) }}</mat-label><mat-select panelClass="edp-select-panel" multiple [formControlName]="role">@for (person of filteredPeople(role); track person.id) { <mat-option [value]="person">{{ person.name }}{{ person.email ? ' · ' + person.email : '' }}</mat-option> }</mat-select></mat-form-field>
+            @if ((keyPeopleForm.get(role)?.value ?? []).length > 0) { <div class="project-role-tags">@for (person of (keyPeopleForm.get(role)?.value ?? []); track person.id) { <span>{{ person.name }}<button type="button" (click)="removePersonFromProjectRole(role, person.id)" aria-label="Remover pessoa">×</button></span> }</div> }
+          </div>
+        }
+        <div class="form-actions"><button mat-flat-button type="submit" [disabled]="keyPeopleSaving()">Guardar key people</button>@if (keyPeopleSaved()) { <span class="saved">Guardado.</span> }</div>
+        </form> }
+      }
+    </mat-card-content>
+  </mat-card>
+
+  @if (projectDataError()) { <div class="dependency-error project-data-error">{{ projectDataError() }}</div> }
+  <section class="supporting-grid">
+    <mat-card class="supporting-card">
+      <mat-card-header><mat-card-title>Parceiros</mat-card-title><mat-card-subtitle>{{ editMode() ? 'Adiciona organizações externas associadas a este projeto.' : 'Organizações externas associadas a este projeto.' }}</mat-card-subtitle></mat-card-header>
+      <mat-card-content>
+        @if (projectPartners().length === 0) { <p class="empty-state">Ainda não existem parceiros associados.</p> }
+        @else { <div class="supporting-list">@for (item of projectPartners(); track item.id) { <div class="supporting-item"><strong>{{ partnerName(item.partner_company_id) }}</strong><span>{{ item.contribution_description || 'Sem descrição de contribuição' }}@if (item.contribution_percentage !== null) { · {{ item.contribution_percentage }}% }</span></div> }</div> }
+        @if (editMode()) { <form class="supporting-form" [formGroup]="projectPartnerForm" (ngSubmit)="addProjectPartner()">
+          <mat-form-field appearance="outline"><mat-label>Parceiro</mat-label><mat-select panelClass="edp-select-panel" formControlName="partner_company_id"><mat-option value="">Selecionar</mat-option>@for (partner of partners(); track partner.id) { <mat-option [value]="partner.id">{{ partner.name }}</mat-option> }</mat-select></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contribuição %</mat-label><input matInput type="number" formControlName="contribution_percentage" /></mat-form-field>
+          <mat-form-field appearance="outline" class="span-2"><mat-label>Descrição da contribuição</mat-label><input matInput formControlName="contribution_description" /></mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="projectDataSaving()">Adicionar parceiro</button>
+        </form> }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="supporting-card">
+      <mat-card-header><mat-card-title>Sprints</mat-card-title><mat-card-subtitle>Planeamento temporal do projeto.</mat-card-subtitle></mat-card-header>
+      <mat-card-content>
+        @if (sprints().length === 0) { <p class="empty-state">Ainda não existem sprints registadas.</p> }
+        @else { <div class="supporting-list">@for (sprint of sprints(); track sprint.id) { <div class="supporting-item"><strong>Sprint {{ sprint.sprint_number }} · {{ sprint.name }}</strong><span>{{ sprint.start_date }} → {{ sprint.end_date }}@if (sprint.goal) { · {{ sprint.goal }} }</span></div> }</div> }
+        <form class="supporting-form" [formGroup]="sprintForm" (ngSubmit)="addSprint()">
+          <mat-form-field appearance="outline"><mat-label>Número</mat-label><input matInput type="number" formControlName="sprint_number" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Início</mat-label><input matInput type="date" formControlName="start_date" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Fim</mat-label><input matInput type="date" formControlName="end_date" /></mat-form-field>
+          <mat-form-field appearance="outline" class="span-2"><mat-label>Objetivo</mat-label><input matInput formControlName="goal" /></mat-form-field>
+          <button mat-flat-button type="submit" [disabled]="projectDataSaving()">Adicionar sprint</button>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  </section>
+}

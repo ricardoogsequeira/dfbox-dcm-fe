@@ -1,0 +1,133 @@
+<section class="page-header">
+  <div>
+    <p class="eyebrow">Administração</p>
+    <h1>{{ 'Configurações' | t }}</h1>
+    <p>{{ 'Operações de preparação da aplicação e comandos administrativos seguros.' | t }}</p>
+  </div>
+</section>
+
+<mat-card class="key-people-settings-card">
+  <mat-card-header>
+    <mat-card-title>{{ 'Key people' | t }}</mat-card-title>
+    <mat-card-subtitle>Gere pessoas não técnicas por role. Estas pessoas não são developers e não entram nas alocações.</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    @if (keyPeopleError()) { <div class="key-people-error">{{ keyPeopleError() }}</div> }
+    <form class="key-people-settings-form" [formGroup]="keyPeopleForm" (ngSubmit)="saveKeyPeople()">
+      <div class="role-grid">
+        @for (role of projectRoles; track role) {
+          <section class="role-section">
+            <h2>{{ enumLabel(role) }}</h2>
+            <p>Seleciona uma ou mais pessoas.</p>
+            <mat-form-field appearance="outline">
+              <mat-label>Pessoas de {{ enumLabel(role) }}</mat-label>
+              <mat-select panelClass="edp-select-panel" multiple [formControlName]="role">
+                @for (person of keyPersonList(); track person.id) { <mat-option [value]="person.id">{{ person.name }}</mat-option> }
+              </mat-select>
+            </mat-form-field>
+            @if ((keyPeopleForm.get(role)?.value ?? []).length > 0) {
+              <div class="role-summary">
+                @for (personId of (keyPeopleForm.get(role)?.value ?? []); track personId) {
+                  <span class="person-tag"><span>{{ personName(personId) }}</span><button type="button" aria-label="Remover pessoa" (click)="removePersonFromRole(role, personId)">×</button></span>
+                }
+              </div>
+            }
+          </section>
+        }
+      </div>
+      <div class="key-people-actions"><button mat-flat-button type="submit" [disabled]="keyPeopleSaving()">Guardar key people</button>@if (keyPeopleSaved()) { <span>Guardado.</span> }</div>
+    </form>
+    <section class="available-key-people">
+      <h2>Pessoas disponíveis</h2>
+      <form class="new-key-person-form" [formGroup]="newKeyPersonForm" (ngSubmit)="addKeyPerson()">
+        <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Email (opcional)</mat-label><input matInput type="email" formControlName="email" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Empresa</mat-label><input matInput formControlName="company" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Área</mat-label><mat-select panelClass="edp-select-panel" formControlName="business_area">@for (area of businessAreas; track area) { <mat-option [value]="area">{{ enumLabel(area) }}</mat-option> }</mat-select></mat-form-field>
+        <button mat-stroked-button type="submit">Adicionar pessoa</button>
+      </form>
+      <div class="people-list">
+        @for (person of keyPersonList(); track person.id) {
+          <div class="person-row"><div><strong>{{ person.name }}</strong><span>{{ person.email || 'Sem email' }} · {{ person.company || 'Empresa não definida' }} · {{ person.business_area ? enumLabel(person.business_area) : 'Área não definida' }}</span></div><div class="person-actions"><button mat-button type="button" (click)="editKeyPerson(person)">Editar</button><button mat-button type="button" (click)="removeKeyPerson(person)">Remover</button></div></div>
+        } @empty { <p>Ainda não existem key people configuradas.</p> }
+      </div>
+    </section>
+  </mat-card-content>
+</mat-card>
+
+@if (editingKeyPerson(); as person) {
+  <div class="key-person-modal-backdrop" (click)="closeKeyPersonEditor()">
+    <section class="key-person-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="key-person-modal-header"><div><p class="eyebrow">Key people</p><h2>Editar {{ person.name }}</h2></div><button mat-stroked-button type="button" (click)="closeKeyPersonEditor()">Fechar</button></div>
+      <form class="key-person-edit-form" [formGroup]="editKeyPersonForm" (ngSubmit)="saveKeyPerson()">
+        <mat-form-field appearance="outline"><mat-label>Nome</mat-label><input matInput formControlName="name" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" formControlName="email" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Empresa</mat-label><input matInput formControlName="company" /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Área</mat-label><mat-select panelClass="edp-select-panel" formControlName="business_area">@for (area of businessAreas; track area) { <mat-option [value]="area">{{ enumLabel(area) }}</mat-option> }</mat-select></mat-form-field>
+        <div class="key-person-modal-actions"><button mat-stroked-button type="button" (click)="closeKeyPersonEditor()">Cancelar</button><button mat-flat-button type="submit" [disabled]="keyPersonSaving()">Guardar alterações</button></div>
+      </form>
+    </section>
+  </div>
+}
+
+<section class="settings-block partners-block">
+  <div class="settings-section-heading"><p class="eyebrow">Portfolio</p><h2>{{ 'Gestão de parceiros' | t }}</h2><p>Catálogo de organizações externas reutilizado nas fichas de projeto.</p></div>
+<mat-card class="partners-settings-card">
+  <mat-card-header>
+    <mat-card-title>Parceiros</mat-card-title>
+    <mat-card-subtitle>Gere o catálogo de organizações externas disponível nas fichas de projeto.</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    @if (partnerError()) { <div class="key-people-error">{{ partnerError() }}</div> }
+    <form class="new-partner-form" [formGroup]="newPartnerForm" (ngSubmit)="addPartner()">
+      <mat-form-field appearance="outline"><mat-label>Nome da organização</mat-label><input matInput formControlName="name" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Contacto</mat-label><input matInput formControlName="contact_name" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" formControlName="contact_email" /></mat-form-field>
+      <mat-form-field appearance="outline"><mat-label>Notas</mat-label><input matInput formControlName="notes" /></mat-form-field>
+      <button mat-flat-button type="submit" [disabled]="partnerSaving()">Adicionar parceiro</button>
+    </form>
+    <div class="partners-list">
+      @for (partner of partners(); track partner.id) {
+        <div class="partner-row"><div><strong>{{ partner.name }}</strong><span>{{ partner.contact_name || 'Sem contacto registado' }}{{ partner.contact_email ? ' · ' + partner.contact_email : '' }}</span></div><button mat-button type="button" (click)="removePartner(partner)">Remover</button></div>
+      } @empty { <p>Ainda não existem parceiros configurados.</p> }
+    </div>
+  </mat-card-content>
+</mat-card>
+</section>
+
+@if (error()) { <mat-card class="error-card">{{ error() }}</mat-card> }
+@if (result()) { <mat-card class="success-card">Criadas {{ result()?.created }} semana(s). Total disponível: {{ result()?.total_weeks }}.</mat-card> }
+
+<section class="settings-block weeks-block">
+  <div class="settings-section-heading"><p class="eyebrow">Capacity planning</p><h2>Semanas ISO</h2><p>Calendário global usado nas alocações e no planeamento de capacidade.</p></div>
+<section class="settings-grid">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Calendário ISO</mat-card-title>
+      <mat-card-subtitle>Pré-carregado pela migration inicial até 2030</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>A aplicação usa semanas ISO como unidade global de capacidade.</p>
+      @if (latestWeek(); as week) {
+        <p class="calendar-boundary"><strong>Última semana disponível</strong><span>ISO {{ week.iso_year }}-W{{ week.iso_week }} · termina em {{ week.end_date }}</span></p>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Extensão contínua</mat-card-title>
+      <mat-card-subtitle>Adicionar semanas futuras quando necessário</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <form class="weeks-form" [formGroup]="form" (ngSubmit)="extendByWeeks()">
+        <mat-form-field appearance="outline">
+          <mat-label>Número de semanas a acrescentar</mat-label>
+          <input matInput type="number" formControlName="weeks_ahead" />
+        </mat-form-field>
+        <button mat-flat-button type="submit" [disabled]="saving()">Estender após {{ latestWeekLabel() }}</button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</section>
+</section>

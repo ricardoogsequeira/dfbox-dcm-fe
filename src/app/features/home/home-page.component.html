@@ -1,0 +1,125 @@
+<section class="page-header" aria-labelledby="capacity-title">
+  <div>
+    <p class="eyebrow">{{ 'Capacity planning' | t }}</p>
+    <h1 id="capacity-title">{{ 'Calendário de alocação por projeto' | t }}</h1>
+    <p>{{ 'Janela operacional com 2 semanas anteriores e 6 semanas futuras. Projetos ordenados por data de início.' | t }}</p>
+  </div>
+
+  <div class="header-actions">
+    <aside class="status-panel" aria-label="Estado do backend">
+      <span class="status-dot" [class.online]="health() === 'available'"></span>
+      <div>
+        <strong>{{ 'Backend' | t }}</strong>
+        <span>{{ (health() === 'checking' ? 'A verificar' : health() === 'available' ? 'Operacional' : 'Indisponível') | t }}</span>
+      </div>
+    </aside>
+    <button mat-stroked-button type="button" (click)="refresh()">{{ 'Atualizar' | t }}</button>
+    <a mat-flat-button routerLink="/allocations">{{ 'Alocações' | t }}</a>
+  </div>
+</section>
+
+@if (loading()) {
+  <div class="loading-state"><mat-spinner diameter="34" /> A carregar calendário...</div>
+} @else if (loadError()) {
+  <mat-card class="error-card">
+    <mat-card-title>Dados indisponíveis</mat-card-title>
+    <mat-card-content><p>{{ loadError() }}</p><button mat-flat-button type="button" (click)="refresh()">Tentar novamente</button></mat-card-content>
+  </mat-card>
+} @else if (dashboard(); as data) {
+  <section class="summary-strip" [attr.aria-label]="'Resumo operacional' | t">
+    <a routerLink="/projects"><strong>{{ data.projects.length }}</strong><span>Projetos</span></a>
+    <a routerLink="/developers"><strong>{{ data.developers.length }}</strong><span>Developers</span></a>
+    <a routerLink="/allocations"><strong>{{ data.allocations.length }}</strong><span>Alocações</span></a>
+    <a routerLink="/allocations" class="risk"><strong>{{ data.overAllocatedDevelopers }}</strong><span>{{ 'Riscos >100%' | t }}</span></a>
+  </section>
+
+  <section class="dependencies-dashboard" aria-labelledby="dependencies-title">
+    <div class="section-heading"><div><p class="eyebrow">{{ 'Project health' | t }}</p><h2 id="dependencies-title">{{ 'Dependências dos projetos' | t }}</h2></div><a mat-stroked-button routerLink="/projects">{{ 'Gerir dependências' | t }}</a></div>
+    <div class="dependency-metrics">
+      <div><strong>{{ totalDependencies(data) }}</strong><span>{{ 'Total' | t }}</span></div>
+      <div><strong>{{ activeDependencies(data) }}</strong><span>{{ 'Ativas' | t }}</span></div>
+      <div class="blocking-metric"><strong>{{ blockingDependencies(data) }}</strong><span>{{ 'Bloqueantes' | t }}</span></div>
+      <div><strong>{{ resolvedDependencies(data) }}</strong><span>{{ 'Resolvidas' | t }}</span></div>
+    </div>
+    @if (dashboardDependencies(data).length === 0) {
+      <p class="dependencies-empty">Ainda não existem dependências registadas.</p>
+    } @else {
+      <div class="dashboard-dependency-list">
+        @for (dependency of dashboardDependencies(data); track dependency.id) {
+          @let project = dependencyProject(data, dependency);
+          <a class="dashboard-dependency" [routerLink]="project ? ['/projects', project.id] : ['/projects']" [class.blocking-dependency]="isBlockingDependency(dependency)">
+            <div><strong>{{ project?.code || 'Projeto' }} · {{ dependency.title }}</strong><span>{{ project?.name || 'Projeto não encontrado' }}</span></div>
+            <div class="dashboard-dependency-meta"><span>{{ enumLabel(dependency.status) }}</span><span>{{ enumLabel(dependency.impact_level) }}</span><small>Alvo {{ dependency.target_date }}</small></div>
+          </a>
+        }
+      </div>
+    }
+  </section>
+
+  <mat-card class="calendar-card">
+    <mat-card-content>
+      <div class="calendar-toolbar">
+        <label class="project-search">
+          <span>Filtrar projeto</span>
+          <input type="search" [value]="projectFilter()" (input)="projectFilter.set($any($event.target).value)" placeholder="Código ou nome" />
+        </label>
+        <label class="project-sort">
+          <span>Ordenar por</span>
+          <select [value]="projectSort()" (change)="projectSort.set($any($event.target).value)">
+            <option value="start_date">Data de início</option>
+            <option value="code">Código</option>
+            <option value="name">Nome</option>
+          </select>
+        </label>
+        <button mat-stroked-button type="button" (click)="toggleProjectSortDirection()" [attr.aria-label]="'Ordenação ' + (projectSortDirection() === 'asc' ? 'ascendente' : 'descendente')">
+          {{ projectSortDirection() === 'asc' ? 'A → Z' : 'Z → A' }}
+        </button>
+      </div>
+      @if (orderedProjects(data).length === 0) {
+        <div class="empty-state">
+          <strong>{{ data.projects.length === 0 ? 'Ainda não existem projetos.' : 'Nenhum projeto corresponde ao filtro.' }}</strong>
+          <span>{{ data.projects.length === 0 ? 'Cria projetos e developers para começar a planear alocações.' : 'Experimenta outro código ou nome.' }}</span>
+          <a mat-stroked-button routerLink="/projects">Criar projeto</a>
+        </div>
+      } @else {
+        <div class="calendar-scroll">
+        <div class="calendar-grid" [style.--week-count]="visibleWeeks(data).length">
+          <div class="grid-cell corner-cell">Projeto</div>
+          @for (week of visibleWeeks(data); track week.id) {
+            <div class="grid-cell week-cell" [class.current-week]="isCurrentWeek(week)">
+              <strong>{{ weekLabel(week) }}</strong>
+              <span>{{ week.start_date }} · {{ week.end_date }}</span>
+            </div>
+          }
+
+          @for (project of orderedProjects(data); track project.id) {
+            <a class="grid-cell project-cell" [routerLink]="['/projects', project.id]" [class.blocking-dependency]="project.has_blocking_dependency" [attr.aria-label]="project.has_blocking_dependency ? project.code + ': dependência bloqueante' : project.code">
+              <strong>{{ project.code }}</strong>
+              <span>{{ project.name }}</span>
+              <small>{{ project.start_date || 'sem início' }} → {{ project.target_end_date || 'sem fim' }}</small>
+              @if (project.has_blocking_dependency) { <em class="dependency-flag">{{ project.blocking_dependency_count }} dependência(s) bloqueante(s)</em> }
+            </a>
+
+            @for (week of visibleWeeks(data); track week.id) {
+              @let cell = allocationCell(data, project.id, week.id);
+              <a
+                class="grid-cell allocation-cell"
+                routerLink="/allocations"
+                [class.has-allocation]="cell.percentage > 0"
+                [class.warning]="cell.overallocated"
+              >
+                @if (cell.percentage > 0) {
+                  <strong>{{ cell.percentage }}%</strong>
+                  <span>{{ cell.developers.join(', ') }}</span>
+                } @else {
+                  <span class="empty-allocation">—</span>
+                }
+              </a>
+            }
+          }
+        </div>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+}
